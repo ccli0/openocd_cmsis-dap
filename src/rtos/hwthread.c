@@ -279,7 +279,16 @@ static int hwthread_get_thread_reg(struct rtos *rtos, int64_t thread_id,
 		return ERROR_FAIL;
 	}
 
-	struct reg *reg = register_get_by_number(curr->reg_cache, reg_num, true);
+	struct reg *reg;
+	char const *architecture = target_get_gdb_arch(target);
+
+	if (strcmp(architecture, "arm") == 0) {
+		reg = register_get_by_number(curr->reg_cache->next, reg_num, true);
+	}
+	else {
+		reg = register_get_by_number(curr->reg_cache, reg_num, true);
+	}
+
 	if (!reg) {
 		LOG_ERROR("Couldn't find register %d in thread %" PRId64 ".", reg_num,
 				thread_id);
@@ -309,7 +318,16 @@ int hwthread_set_reg(struct rtos *rtos, uint32_t reg_num, uint8_t *reg_value)
 	if (curr == NULL)
 		return ERROR_FAIL;
 
-	struct reg *reg = register_get_by_number(curr->reg_cache, reg_num, true);
+	struct reg *reg;
+	char const *architecture = target_get_gdb_arch(target);
+
+	if (strcmp(architecture, "arm") == 0) {
+		reg = register_get_by_number(curr->reg_cache->next, reg_num, true);
+	}
+	else {
+		reg = register_get_by_number(curr->reg_cache, reg_num, true);
+	}
+
 	if (!reg)
 		return ERROR_FAIL;
 

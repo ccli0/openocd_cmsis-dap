@@ -199,6 +199,112 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 				ARMV8_MRS(SYSTEM_SPSR_EL3, 0), &value);
 		value_64 = value;
 		break;
+	case ARMV8_IFSR32_EL2:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_IFSR32_EL2, 0), &value_64);
+		break;
+	case ARMV8_FAR_EL1:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_FAR_EL1, 0), &value_64);
+		break;
+	case ARMV8_FAR_EL2:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_FAR_EL2, 0), &value_64);
+		break;
+	case ARMV8_FAR_EL3:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_FAR_EL3, 0), &value_64);
+		break;
+	case ARMV8_HPFAR_EL2:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_HPFAR_EL2, 0), &value_64);
+		break;
+	case ARMV8_ISR_EL1:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_ISR_EL1, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_VBAR_EL1:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_VBAR_EL1, 0), &value_64);
+		break;
+	case ARMV8_VBAR_EL2:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_VBAR_EL2, 0), &value_64);
+		break;
+	case ARMV8_VBAR_EL3:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_VBAR_EL3, 0), &value_64);
+		break;
+	case ARMV8_SCTLR_EL1:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_SCTLR_EL1, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_SCTLR_EL2:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_SCTLR_EL2, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_SCTLR_EL3:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_SCTLR_EL3, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_TTBR0_EL1:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_TTBR0_EL1, 0), &value_64);
+		break;
+	case ARMV8_TTBR0_EL2:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_TTBR0_EL2, 0), &value_64);
+		break;
+	case ARMV8_TTBR0_EL3:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_TTBR0_EL3, 0), &value_64);
+		break;		
+	case ARMV8_TTBR1_EL1:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_TTBR1_EL1, 0), &value_64);
+		break;
+	case ARMV8_TCR_EL1:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_TCR_EL1, 0), &value_64);
+		break;
+	case ARMV8_TCR_EL2:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_TCR_EL2, 0), &value_64);
+		break;
+	case ARMV8_TCR_EL3:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_TCR_EL3, 0), &value_64);
+		break;
+	case ARMV8_HCR_EL2:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_HCR_EL2, 0), &value_64);
+		break;
+	case ARMV8_VTTBR_EL2:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_VTTBR_EL2, 0), &value_64);
+		break;
+	case ARMV8_VSTTBR_EL2:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_VSTTBR_EL2, 0), &value_64);
+		break;
+	case ARMV8_VTCR_EL2:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_VTCR_EL2, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_VSTCR_EL2:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_VSTCR_EL2, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_MPIDR_EL1:
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_MPIDR, 0), &value_64);
+		break;
 	default:
 		retval = ERROR_FAIL;
 		break;
@@ -318,6 +424,109 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 		retval = dpm->instr_write_data_r0(dpm,
 				ARMV8_MSR_GP(SYSTEM_SPSR_EL3, 0), value);
 		break;
+	case ARMV8_IFSR32_EL2:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_IFSR32_EL2, 0), value_64);
+		break;
+	case ARMV8_FAR_EL1:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_FAR_EL1, 0), value_64);
+		break;
+	case ARMV8_FAR_EL2:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_FAR_EL2, 0), value_64);
+		break;
+	case ARMV8_FAR_EL3:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_FAR_EL3, 0), value_64);
+		break;
+	case ARMV8_HPFAR_EL2:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_HPFAR_EL2, 0), value_64);
+		break;
+	case ARMV8_ISR_EL1:
+		retval = ERROR_OK;
+		break;
+	case ARMV8_VBAR_EL1:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_VBAR_EL1, 0), value_64);
+		break;
+	case ARMV8_VBAR_EL2:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_VBAR_EL2, 0), value_64);
+		break;
+	case ARMV8_VBAR_EL3:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_VBAR_EL3, 0), value_64);
+		break;
+	case ARMV8_SCTLR_EL1:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_SCTLR_EL1, 0), value);
+		break;
+	case ARMV8_SCTLR_EL2:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_SCTLR_EL2, 0), value);
+		break;
+	case ARMV8_SCTLR_EL3:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_SCTLR_EL3, 0), value);
+		break;
+	case ARMV8_TTBR0_EL1:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_TTBR0_EL1, 0), value_64);
+		break;
+	case ARMV8_TTBR0_EL2:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_TTBR0_EL2, 0), value_64);
+		break;
+	case ARMV8_TTBR0_EL3:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_TTBR0_EL3, 0), value_64);
+		break;
+	case ARMV8_TTBR1_EL1:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_TTBR1_EL1, 0), value_64);
+		break;
+	case ARMV8_TCR_EL1:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_TCR_EL1, 0), value_64);
+		break;
+	case ARMV8_TCR_EL2:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_TCR_EL2, 0), value_64);
+		break;
+	case ARMV8_TCR_EL3:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_TCR_EL3, 0), value_64);
+		break;	
+	case ARMV8_HCR_EL2:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_HCR_EL2, 0), value_64);
+		break;	
+	case ARMV8_VTTBR_EL2:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_VTTBR_EL2, 0), value_64);
+		break;
+	case ARMV8_VSTTBR_EL2:
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_VSTTBR_EL2, 0), value_64);
+		break;
+	case ARMV8_VTCR_EL2:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_VTCR_EL2, 0), value);
+		break;
+	case ARMV8_VSTCR_EL2:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_VSTCR_EL2, 0), value);
+		break;
+	case ARMV8_MPIDR_EL1:
+		retval = ERROR_OK;
+		break;
 	default:
 		retval = ERROR_FAIL;
 		break;
@@ -424,6 +633,91 @@ static int armv8_read_reg32(struct armv8_common *armv8, int regnum, uint64_t *re
 		/* "VMRS r0, FPSCR"; then return via DCC */
 		retval = dpm->instr_read_data_r0(dpm,
 			ARMV4_5_VMRS(0), &value);
+		break;
+	case ARMV8_IFSR32_EL2: /* mapped to IFSR */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 0, 0, 5, 0, 1),
+				&value);
+		break;		
+	case ARMV8_FAR_EL1: /* mapped to DFAR */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 0, 0, 6, 0, 0),
+				&value);
+		break;
+	case ARMV8_FAR_EL2: /* mapped to HDFAR */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 4, 0, 6, 0, 0),
+				&value);
+		break;
+	case ARMV8_HPFAR_EL2: /* mapped to HPFAR */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 4, 0, 6, 0, 4),
+				&value);
+		break;
+	case ARMV8_ISR_EL1: /* mapped to ISR */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 0, 0, 12, 1, 0),
+				&value);
+		break;
+	case ARMV8_VBAR_EL1: /* mapped to VBAR */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 0, 0, 12, 0, 0),
+				&value);
+		break;
+	case ARMV8_VBAR_EL2: /* mapped to HVBAR */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 4, 0, 12, 0, 0),
+				&value);
+		break;
+	case ARMV8_SCTLR_EL1: /* mapped to SCTLR */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 0, 0, 1, 0, 0),
+				&value);
+		break;
+	case ARMV8_SCTLR_EL2: /* mapped to HSCTLR */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 4, 0, 1, 0, 0),
+				&value);
+		break;
+	case ARMV8_TTBR0_EL1: /* mapped to TTBR0 */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 0, 0, 2, 0, 0),
+				&value);
+		break;
+	case ARMV8_TTBR0_EL2: /* mapped to HTTBR */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 4, 0, 1, 0, 0),
+				&value);
+		break;
+	case ARMV8_TTBR1_EL1: /* mapped to TTBR1 */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 0, 0, 2, 0, 1),
+				&value);
+		break;
+	case ARMV8_TCR_EL1: /* mapped to TTBCR */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 0, 0, 2, 0, 2),
+				&value);
+		break;
+	case ARMV8_TCR_EL2: /* mapped to HTCR */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 4, 0, 2, 0, 2),
+				&value);
+		break;
+	case ARMV8_VTTBR_EL2: /* mapped to VTTBR */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 4, 0, 2, 0, 2),
+				&value);
+		break;
+	case ARMV8_VTCR_EL2: /* mapped to VTCR */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 4, 0, 2, 1, 2),
+				&value);
+		break;
+	case ARMV8_MPIDR_EL1: /* mapped to MPIDR */
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV4_5_MRC(15, 0, 0, 0, 0, 5),
+				&value);
 		break;
 	default:
 		retval = ERROR_FAIL;
@@ -558,6 +852,87 @@ static int armv8_write_reg32(struct armv8_common *armv8, int regnum, uint64_t va
 		/* move to r0 from DCC, then "VMSR FPSCR, r0" */
 		retval = dpm->instr_write_data_r0(dpm,
 			ARMV4_5_VMSR(0), value);
+		break;
+	case ARMV8_IFSR32_EL2: /* mapped to IFSR */
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV4_5_MCR(15, 0, 0, 5, 0, 1),
+				value);
+		break;
+	case ARMV8_FAR_EL1: /* mapped to DFAR */
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV4_5_MCR(15, 0, 0, 6, 0, 0),
+				value);
+		break;
+	case ARMV8_FAR_EL2: /* mapped to HDFAR */
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV4_5_MCR(15, 4, 0, 6, 0, 0),
+				value);
+		break;
+	case ARMV8_HPFAR_EL2: /* mapped to HPFAR */
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV4_5_MCR(15, 4, 0, 6, 0, 4),
+				value);
+		break;
+	case ARMV8_ISR_EL1: /* mapped to ISR */
+		retval = ERROR_OK;
+		break;
+	case ARMV8_VBAR_EL1: /* mapped to VBAR */
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV4_5_MCR(15, 0, 0, 12, 0, 0),
+				value);
+		break;
+	case ARMV8_VBAR_EL2: /* mapped to HVBAR */
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV4_5_MCR(15, 4, 0, 12, 0, 0),
+				value);
+		break;
+	case ARMV8_SCTLR_EL1: /* mapped to SCTLR */
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV4_5_MCR(15, 0, 0, 1, 0, 0),
+				value);
+		break;
+	case ARMV8_SCTLR_EL2: /* mapped to HSCTLR */
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV4_5_MCR(15, 4, 0, 1, 0, 0),
+				value);
+		break;
+	case ARMV8_TTBR0_EL1: /* mapped to TTBR0 */
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV4_5_MCR(15, 0, 0, 2, 0, 0),
+				value);
+		break;
+	case ARMV8_TTBR0_EL2: /* mapped to HTTBR */
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV4_5_MCR(15, 4, 0, 1, 0, 0),
+				value);
+		break;
+	case ARMV8_TTBR1_EL1: /* mapped to TTBR1 */
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV4_5_MCR(15, 0, 0, 2, 0, 1),
+				value);
+		break;
+	case ARMV8_TCR_EL1: /* mapped to TTBCR */
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV4_5_MCR(15, 0, 0, 2, 0, 2),
+				value);
+		break;
+	case ARMV8_TCR_EL2: /* mapped to HTCR */
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV4_5_MCR(15, 4, 0, 2, 0, 2),
+				value);
+		break;
+	case ARMV8_VTTBR_EL2: /* mapped to VTTBR */
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV4_5_MCR(15, 4, 0, 2, 0, 2),
+				value);
+		break;
+	case ARMV8_VTCR_EL2: /* mapped to VTCR */
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV4_5_MCR(15, 4, 0, 2, 1, 2),
+				value);
+		break;
+	case ARMV8_MPIDR_EL1: /* mapped to MPIDR */
+		retval = ERROR_OK;
 		break;
 	default:
 		retval = ERROR_FAIL;
@@ -1421,6 +1796,57 @@ static const struct {
 														NULL},
 	{ ARMV8_SPSR_EL3, "SPSR_EL3", 32, ARMV8_64_EL3H, REG_TYPE_UINT32, "banked", "net.sourceforge.openocd.banked",
 														NULL},
+
+	{ ARMV8_IFSR32_EL2, "IFSR32_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_FAR_EL1, "FAR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_FAR_EL2, "FAR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_FAR_EL3, "FAR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_HPFAR_EL2, "HPFAR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_ISR_EL1, "ISR_EL1", 32, ARMV8_64_EL1H, REG_TYPE_UINT32, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_VBAR_EL1, "VBAR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_VBAR_EL2, "VBAR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_VBAR_EL3, "VBAR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_SCTLR_EL1, "SCTLR_EL1", 32, ARMV8_64_EL1H, REG_TYPE_UINT32, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_SCTLR_EL2, "SCTLR_EL2", 32, ARMV8_64_EL2H, REG_TYPE_UINT32, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_SCTLR_EL3, "SCTLR_EL3", 32, ARMV8_64_EL3H, REG_TYPE_UINT32, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_TTBR0_EL1, "TTBR0_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_TTBR0_EL2, "TTBR0_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_TTBR0_EL3, "TTBR0_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_TTBR1_EL1, "TTBR1_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_TCR_EL1, "TCR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_TCR_EL2, "TCR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_TCR_EL3, "TCR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_HCR_EL2, "HCR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_VTTBR_EL2, "VTTBR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},	
+	{ ARMV8_VSTTBR_EL2, "VSTTBR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},	
+	{ ARMV8_VTCR_EL2, "VTCR_EL2", 32, ARMV8_64_EL2H, REG_TYPE_UINT32, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_VSTCR_EL2, "VSTCR_EL2", 32, ARMV8_64_EL2H, REG_TYPE_UINT32, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_MPIDR_EL1, "MPIDR_EL1", 32, ARMV8_64_EL1H, REG_TYPE_UINT32, "banked", "net.sourceforge.openocd.banked",
+														NULL},
 };
 
 static const struct {
@@ -1450,39 +1876,48 @@ static const struct {
 	{ ARMV8_R14, 0, "lr",  32, ARM_MODE_ANY, REG_TYPE_CODE_PTR, "general", "org.gnu.gdb.arm.core" },
 	{ ARMV8_PC, 0, "pc",   32, ARM_MODE_ANY, REG_TYPE_CODE_PTR, "general", "org.gnu.gdb.arm.core" },
 	{ ARMV8_xPSR, 0, "cpsr", 32, ARM_MODE_ANY, REG_TYPE_UINT32, "general", "org.gnu.gdb.arm.core" },
-	{ ARMV8_V0, 0, "d0",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V0, 8, "d1",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V1, 0, "d2",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V1, 8, "d3",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V2, 0, "d4",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V2, 8, "d5",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V3, 0, "d6",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V3, 8, "d7",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V4, 0, "d8",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V4, 8, "d9",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V5, 0, "d10", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V5, 8, "d11", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V6, 0, "d12", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V6, 8, "d13", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V7, 0, "d14", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V7, 8, "d15", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V8, 0, "d16", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V8, 8, "d17", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V9, 0, "d18", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V9, 8, "d19", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V10, 0, "d20", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V10, 8, "d21", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V11, 0, "d22", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V11, 8, "d23", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V12, 0, "d24", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V12, 8, "d25", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V13, 0, "d26", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V13, 8, "d27", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V14, 0, "d28", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V14, 8, "d29", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V15, 0, "d30", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_V15, 8, "d31", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
-	{ ARMV8_FPSR, 0, "fpscr", 32, ARM_MODE_ANY, REG_TYPE_UINT32, "float", "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V0, 0, "d0",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V0, 8, "d1",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V1, 0, "d2",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V1, 8, "d3",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V2, 0, "d4",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V2, 8, "d5",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V3, 0, "d6",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V3, 8, "d7",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V4, 0, "d8",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V4, 8, "d9",  64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V5, 0, "d10", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V5, 8, "d11", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V6, 0, "d12", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V6, 8, "d13", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V7, 0, "d14", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V7, 8, "d15", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V8, 0, "d16", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V8, 8, "d17", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V9, 0, "d18", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V9, 8, "d19", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V10, 0, "d20", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V10, 8, "d21", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V11, 0, "d22", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V11, 8, "d23", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V12, 0, "d24", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V12, 8, "d25", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V13, 0, "d26", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V13, 8, "d27", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V14, 0, "d28", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V14, 8, "d29", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V15, 0, "d30", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_V15, 8, "d31", 64, ARM_MODE_ANY, REG_TYPE_IEEE_DOUBLE, NULL, "org.gnu.gdb.arm.vfp"},
+//	{ ARMV8_FPSR, 0, "fpscr", 32, ARM_MODE_ANY, REG_TYPE_UINT32, "float", "org.gnu.gdb.arm.vfp"},
+	{ ARMV8_IFSR32_EL2, 0, "IFSR",  32, ARM_MODE_ANY, REG_TYPE_UINT32, "banked", "net.sourceforge.openocd.banked"},
+	{ ARMV8_FAR_EL1, 0, "DFAR",  32, ARM_MODE_ANY, REG_TYPE_UINT32, "banked", "net.sourceforge.openocd.banked"},
+	{ ARMV8_ISR_EL1, 0, "ISR",  32, ARM_MODE_ANY, REG_TYPE_UINT32, "banked", "net.sourceforge.openocd.banked"},
+	{ ARMV8_VBAR_EL1, 0, "VBAR",  32, ARM_MODE_ANY, REG_TYPE_UINT32, "banked", "net.sourceforge.openocd.banked"},
+	{ ARMV8_SCTLR_EL1, 0, "SCTLR",  32, ARM_MODE_ANY, REG_TYPE_UINT32, "banked", "net.sourceforge.openocd.banked"},
+	{ ARMV8_TTBR0_EL1, 0, "TTBR0",  64, ARM_MODE_ANY, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked"},
+	{ ARMV8_TTBR1_EL1, 0, "TTBR1",  64, ARM_MODE_ANY, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked"},
+	{ ARMV8_TCR_EL1, 0, "TTBCR",  32, ARM_MODE_ANY, REG_TYPE_UINT32, "banked", "net.sourceforge.openocd.banked"},
+	{ ARMV8_MPIDR_EL1, 0, "MPIDR",  32, ARM_MODE_ANY, REG_TYPE_UINT32, "banked", "net.sourceforge.openocd.banked"},
 };
 
 #define ARMV8_NUM_REGS ARRAY_SIZE(armv8_regs)
@@ -1505,6 +1940,7 @@ static int armv8_set_core_reg(struct reg *reg, uint8_t *buf)
 	struct arm_reg *armv8_reg = reg->arch_info;
 	struct target *target = armv8_reg->target;
 	struct arm *arm = target_to_arm(target);
+	struct armv8_common *armv8 = target_to_armv8(target);
 	uint64_t value = buf_get_u64(buf, 0, reg->size);
 
 	if (target->state != TARGET_HALTED)
@@ -1513,6 +1949,11 @@ static int armv8_set_core_reg(struct reg *reg, uint8_t *buf)
 	if (reg->size <= 64) {
 		if (reg == arm->cpsr)
 			armv8_set_cpsr(arm, (uint32_t)value);
+		else if ((armv8_reg->mode == ARMV8_64_EL1H) 
+				|| (armv8_reg->mode == ARMV8_64_EL2H)
+				|| (armv8_reg->mode == ARMV8_64_EL3H)) {
+			armv8_write_reg(armv8, reg->number, value);
+		}
 		else {
 			buf_set_u64(reg->value, 0, reg->size, value);
 			reg->valid = true;
