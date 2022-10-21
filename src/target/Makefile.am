@@ -25,7 +25,7 @@ noinst_LTLIBRARIES += %D%/libtarget.la
 	$(INTEL_IA32_SRC) \
 	$(ESIRISC_SRC) \
         $(ARC_SRC) \
-	$(KM1M7_SRC) \
+	$(KM1Mx_SRC) \
 	%D%/avrt.c \
 	%D%/dsp563xx.c \
 	%D%/dsp563xx_once.c \
@@ -161,8 +161,9 @@ ARC_SRC = \
         %D%/arc_jtag.c \
         %D%/arc_mem.c
 
-KM1M7_SRC = \
-	%D%/km1m7xx.c
+KM1Mx_SRC = \
+	%D%/km1m7xx.c \
+	%D%/km1m4xx.c
 
 %C%_libtarget_la_SOURCES += \
 	%D%/algorithm.h \
