@@ -35,6 +35,7 @@ NOR_DRIVERS = \
 	%D%/kinetis.c \
 	%D%/kinetis_ke.c \
 	%D%/km1m7xx.c \
+	%D%/km1m4xx.c \
 	%D%/lpc2000.c \
 	%D%/lpc288x.c \
 	%D%/lpc2900.c \
