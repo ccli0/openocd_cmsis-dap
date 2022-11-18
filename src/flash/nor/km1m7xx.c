@@ -21,42 +21,223 @@
 #endif
 
 #include "imp.h"
+#include "km1mxxx.h"
 #include <helper/binarybuffer.h>
 #include <target/algorithm.h>
 #include <target/armv7m.h>
 
 #include <target/image.h>
 
-/* Definition for Flash Memory */
-#define	FLASH_SECTOR_SIZE		0x1000
-
 /* Definition for Flash Memory Interface Register */
-#define	FI_BASE_ADDRESS			0x4001C000
+#define	FI_BASE_ADDRESS				0x4001C000
 
-#define	FEWEN					0x4001C000
-#define	FEWEN_KEY_CODE			0x2900
-#define	FEWEN_ENABLE			0x004B
+#define	FEWEN						0x4001C000
+#define	FEWEN_KEY_CODE				0x2900
+#define	FEWEN_ENABLE				0x004B
 
-#define	SPROSTR					0x4001C018
-#define	SPROSTR_ENABLE			0x00800000
-#define	SPROEND					0x4001C01C
-#define	SPROEND_ENABLE			0x10810000
+#define	FISPROSTR					0x4001C018
+#define	FISPROEND					0x4001C01C
+#define	FISPROSTR_KM1M7C			0x4001C020
+#define	FISPROEND_KM1M7C			0x4001C024
 
-#define	FWCNT					0x4001C004
-#define	FWCNT_ERASE				0x00000002
-#define	FWCNT_START				0x00000001
+#define	FISPROSTR_ENABLE			0x00000000
+#define	FISPROEND_ENABLE			0xFFFFFF00
 
-#define	FMON					0x4001C008
-#define	FMON_ERROR				0x0000FF00
-#define	FMON_WBUSY				0x00000001
+#define	FWCNT						0x4001C004
+#define	FWCNT_ERASE					0x00000002
+#define	FWCNT_START					0x00000001
 
-#define	PEADR					0x4001C00C
+#define	FMON						0x4001C008
+#define	FMON_ERROR					0x0000FF00
+#define	FIFMON_ERROR				0x00FFFF00
+#define	FMON_WBUSY					0x00000001
 
-#define	TIMEOUT_ERASE			100000
+#define	PEADR						0x4001C00C
 
-struct km1m7xx_flash_bank {
-	int		probed;
+/* Definition for System Control Register */
+#define	CCR							0xE000ED14
+#define	CCR_IC						0x00020000
+#define	CCR_DC						0x00010000
+
+#define	CCSIDR						0xE000ED80
+#define	CCSIDR_SSOCIATIVITY_POS		3
+#define	CCSIDR_SSOCIATIVITY_MASK	((uint32_t)0x3FF << CCSIDR_SSOCIATIVITY_POS)
+#define	CCSIDR_WAYS(cssidr)			((cssidr & CCSIDR_SSOCIATIVITY_MASK) \
+										>> CCSIDR_SSOCIATIVITY_POS)
+#define	CCSIDR_NUMSETS_POS			13
+#define	CCSIDR_NUMSETS_MASK			((uint32_t)0x7FFF << CCSIDR_NUMSETS_POS)
+#define	CCSIDR_SETS(cssidr)			((cssidr & CCSIDR_NUMSETS_MASK) \
+										>> CCSIDR_NUMSETS_POS)
+
+#define	CSSELR						0xE000ED84
+#define	CSSELR_IND_DATA				0x00000000
+#define	CSSELR_IND_INSTRUCTION		0x00000001
+
+#define	ICIALLU						0xE000EF50
+#define	ICIALLU_INVALIDATE			0x00000000
+
+#define	DCCISW						0xE000EF74
+#define	DCCISW_SET_POS				5
+#define	DCCISW_SET_MASK				((uint32_t)0x1FF << DCCISW_SET_POS)
+#define	DCCISW_SET(set)				(((set) << DCCISW_SET_POS) & DCCISW_SET_MASK)
+
+#define	DCCISW_WAY_POS				30
+#define	DCCISW_WAY_MASK				((uint32_t)0x00000003 << DCCISW_WAY_POS)
+#define	DCCISW_WAY(way)				(((way) << DCCISW_WAY_POS) & DCCISW_WAY_MASK)
+
+/* Definition KM1M7XX Flash Memory Address */
+#define KM1M7XX_APROM_BASE			0x00800000
+#define KM1M7XX_DATA_BASE			0x10800000
+#define KM1M7XX_DATA0_BASE			0x00C04000
+#define KM1M7XX_DATA1_BASE			0x00E04000
+
+/* Definition KM1M4X Flash Memory Type */
+#define KM1M7XX_FLASH_TYPE_KM1M7AB	0x00000000
+#define KM1M7XX_FLASH_TYPE_KM1M7C	0x00000001
+
+#define KM1M7ABX_BANKS(aprom_size, d_flash_size) \
+	.flash_type = KM1M7XX_FLASH_TYPE_KM1M7AB, \
+	.n_banks = 2, \
+	{ {KM1M7XX_APROM_BASE, (aprom_size)}, {KM1M7XX_DATA_BASE, (d_flash_size)} }
+
+#define KM1M7CX_BANKS(aprom_size, d_flash0_size, d_flash1_size) \
+	.flash_type = KM1M7XX_FLASH_TYPE_KM1M7C, \
+	.n_banks = 3, \
+	{ {KM1M7XX_APROM_BASE, (aprom_size)}, {KM1M7XX_DATA0_BASE, (d_flash0_size)}, \
+	  {KM1M7XX_DATA1_BASE, (d_flash1_size)} }
+
+static const struct km1mxxx_cpu_type km1m7xx_parts_km1m7ab[] = {
+	/*PART NO*/			/*PART ID*/		/*Banks*/
+	/* KM1M7A/B Series */
+	{"KM1M7A/BFxxK",	0x00000000,		KM1M7ABX_BANKS(256*1024, 64*1024)},
+	{"KM1M7A/BFxxM",	0x00000000,		KM1M7ABX_BANKS(384*1024, 64*1024)},
+	{"KM1M7A/BFxxN",	0x00000000,		KM1M7ABX_BANKS(512*1024, 64*1024)},
 };
+
+static const struct km1mxxx_cpu_type km1m7xx_parts[] = {
+	/*PART NO*/			/*PART ID*/		/*Banks*/
+	/* KM1M7C Series */
+	{"KM1M7CF03N",		0x08700100,		KM1M7CX_BANKS(512*1024, 16*1024, 16*1024)},
+	{"KM1M7CF03K",		0x08700000,		KM1M7CX_BANKS(256*1024, 16*1024, 16*1024)},
+	{"KM1M7CF04N",		0x08700101,		KM1M7CX_BANKS(512*1024, 16*1024, 16*1024)},
+	{"KM1M7CF04K",		0x08700001,		KM1M7CX_BANKS(256*1024, 16*1024, 16*1024)},
+	{"KM1M7CF05N",		0x08700102,		KM1M7CX_BANKS(512*1024, 16*1024, 16*1024)},
+	{"KM1M7CF05K",		0x08700002,		KM1M7CX_BANKS(256*1024, 16*1024, 16*1024)},
+	{"KM1M7CF06N",		0x08700103,		KM1M7CX_BANKS(512*1024, 16*1024, 16*1024)},
+	{"KM1M7CF06K",		0x08700003,		KM1M7CX_BANKS(256*1024, 16*1024, 16*1024)},
+	{"KM1M7CF13N",		0x08701100,		KM1M7CX_BANKS(512*1024, 16*1024, 16*1024)},
+	{"KM1M7CF13K",		0x08701000,		KM1M7CX_BANKS(256*1024, 16*1024, 16*1024)},
+	{"KM1M7CF14N",		0x08701101,		KM1M7CX_BANKS(512*1024, 16*1024, 16*1024)},
+	{"KM1M7CF14K",		0x08701001,		KM1M7CX_BANKS(256*1024, 16*1024, 16*1024)},
+	{"KM1M7CF15N",		0x08701102,		KM1M7CX_BANKS(512*1024, 16*1024, 16*1024)},
+	{"KM1M7CF15K",		0x08701002,		KM1M7CX_BANKS(256*1024, 16*1024, 16*1024)},
+	{"KM1M7CF16N",		0x08701103,		KM1M7CX_BANKS(512*1024, 16*1024, 16*1024)},
+	{"KM1M7CF16K",		0x08701003,		KM1M7CX_BANKS(256*1024, 16*1024, 16*1024)},
+};
+
+/* Definition for static variable  */
+static uint32_t backup_ccr = 0;
+
+
+/* Definition for static functions */
+static int km1m7xx_get_cpu_type(struct target *target, const struct km1mxxx_cpu_type **cpu);
+static int km1m7xx_get_flash_size(struct flash_bank *bank, const struct km1mxxx_cpu_type *cpu, uint32_t *flash_size);
+
+/* Cache control functions  */
+static void	enable_icache(struct flash_bank *bank);
+static void	disable_icache(struct flash_bank *bank);
+static void	enable_dcache(struct flash_bank *bank);
+static void	disable_dcache(struct flash_bank *bank);
+static void	invalidate_dcache(struct flash_bank *bank);
+
+static void	enable_icache(struct flash_bank *bank)
+{
+	uint32_t	read_ccr		= 0;
+
+	/* Do nothing if I-Cache is invalid before writing */
+	if ((backup_ccr & CCR_IC) == 0) {
+		return;
+	}
+
+	/* Invalidate I-Cache */
+	target_write_u32(bank->target, ICIALLU, ICIALLU_INVALIDATE);
+
+	/* Enable I-Cache */
+	target_read_u32(bank->target, CCR, &read_ccr);
+	target_write_u32(bank->target, CCR, (read_ccr | CCR_IC));
+}
+
+static void	disable_icache(struct flash_bank *bank)
+{
+	uint32_t	read_ccr		= 0;
+
+	/* Do nothing if I-Cache is disabeled */
+	if ((backup_ccr & CCR_IC) == 0) {
+		return;
+	}
+
+	/* Disable I-Cache */
+	target_read_u32(bank->target, CCR, &read_ccr);
+	target_write_u32(bank->target, CCR, (read_ccr & ~CCR_IC));
+	target_write_u32(bank->target, ICIALLU, ICIALLU_INVALIDATE);
+}
+
+static void enable_dcache(struct flash_bank *bank)
+{
+	uint32_t	read_ccr		= 0;
+
+	/* Do nothing if D-Cache is invalid before writing */
+	if ((backup_ccr & CCR_DC) == 0) {
+		return;
+	}
+
+	/* Invalidate D-Cache */
+	invalidate_dcache(bank);
+
+	/* Enable D-Cache */
+	target_read_u32(bank->target, CCR, &read_ccr);
+	target_write_u32(bank->target, CCR,	(read_ccr | CCR_DC));
+}
+
+static void disable_dcache(struct flash_bank *bank)
+{
+	uint32_t	read_ccr		= 0;
+
+	/* Do nothing if D-Cache is disabeled */
+	if ((backup_ccr & CCR_DC) == 0) {
+		return;
+	}
+
+	/* Disable D-Cache */
+	target_read_u32(bank->target, CCR, &read_ccr);
+	target_write_u32(bank->target, CCR, (read_ccr & ~CCR_DC));
+
+	/* Invalidate D-Cache */
+	invalidate_dcache(bank);
+}
+
+static void invalidate_dcache (struct flash_bank *bank)
+{
+	uint32_t	read_ccsidr;
+	uint32_t	sets;
+	uint32_t	ways;
+
+	/*	Select Level 1 data cache */
+	target_write_u32(bank->target, CSSELR, CSSELR_IND_DATA);
+
+	/* Invalidate D-Cache */
+	target_read_u32(bank->target, CCSIDR, &read_ccsidr);
+	sets = CCSIDR_SETS(read_ccsidr);
+	do {
+		ways = CCSIDR_WAYS(read_ccsidr);
+		do {
+			target_write_u32(bank->target, DCCISW, DCCISW_SET(sets) | DCCISW_WAY(ways));
+		} while (ways--);
+	} while(sets--);
+
+}
+
+
 
 /**
  * @brief	"flash bank" Command
@@ -74,12 +255,18 @@ struct km1m7xx_flash_bank {
  **/
 FLASH_BANK_COMMAND_HANDLER(km1m7xx_flash_bank_command)
 {
-	struct km1m7xx_flash_bank	*km1m7xx_info;
+	struct km1mxxx_flash_bank	*flash_bank_info;
 
-	km1m7xx_info = malloc(sizeof(struct km1m7xx_flash_bank));
-	bank->driver_priv = km1m7xx_info;
+	flash_bank_info = malloc(sizeof(struct km1mxxx_flash_bank));
+	if (!flash_bank_info) {
+		LOG_ERROR("NuMicro flash driver: Out of memory");
+		return ERROR_FAIL;
+	}
 
-	km1m7xx_info->probed	= 0;
+	memset(flash_bank_info, 0, sizeof(struct km1mxxx_flash_bank));
+
+	bank->driver_priv = flash_bank_info;
+	flash_bank_info->probed	= 0;
 
 	return ERROR_OK;
 }
@@ -91,18 +278,49 @@ static int km1m7xx_erase(struct flash_bank *bank, unsigned int first, unsigned i
 	uint32_t	timeout			= 0;
 	uint32_t	sector_index	= 0;
 	uint32_t	address			= 0;
+	uint32_t	flash_type		= KM1M7XX_FLASH_TYPE_KM1M7AB;
+	uint32_t	cache_ctrl_flag	= 0;
+	struct km1mxxx_flash_bank	*flash_bank_info;
+
+	/* Flash Memory type  */
+	flash_bank_info = bank->driver_priv;
+	if (flash_bank_info) {
+		flash_type = flash_bank_info->cpu->flash_type;
+	} else {
+		LOG_ERROR("NuMicro flash driver: Unknown flash type\n");
+		return ERROR_FLASH_OPERATION_FAILED;
+	}
+
+	/* Set flash type parameter */
+	if (flash_type == KM1M7XX_FLASH_TYPE_KM1M7C) {
+		cache_ctrl_flag	= 1;
+	} else {
+		cache_ctrl_flag	= 0;
+	}
+
+	/* Flash Cache disable */
+	if (cache_ctrl_flag) {
+		target_read_u32(bank->target, CCR, &backup_ccr);
+		disable_icache(bank);
+		disable_dcache(bank);
+	}
 
 	/* Flash memory write enable */
 	target_write_u32(bank->target, FEWEN,	(FEWEN_KEY_CODE | FEWEN_ENABLE));
-	target_write_u32(bank->target, SPROSTR,	SPROSTR_ENABLE);
-	target_write_u32(bank->target, SPROEND,	SPROEND_ENABLE);
+	if (flash_type == KM1M7XX_FLASH_TYPE_KM1M7C) {
+		target_write_u32(bank->target, FISPROSTR_KM1M7C,	FISPROSTR_ENABLE);
+		target_write_u32(bank->target, FISPROEND_KM1M7C,	FISPROEND_ENABLE);
+	} else {
+		target_write_u32(bank->target, FISPROSTR,			FISPROSTR_ENABLE);
+		target_write_u32(bank->target, FISPROEND,			FISPROEND_ENABLE);
+	}
 
 	/* Erase specified sectors */
 	for (sector_index = first; sector_index <= last; sector_index++) {
 
 		/* Get sector address */
 		address = bank->base + bank->sectors[sector_index].offset;
-		LOG_INFO("Erase at 0x%08x (Index:%d) \n", address, sector_index);
+		LOG_INFO("Erase at 0x%08x (Index:%d) ", address, sector_index);
 
 		/* Set parameter */
 		target_write_u32(bank->target, PEADR,
@@ -137,6 +355,11 @@ static int km1m7xx_erase(struct flash_bank *bank, unsigned int first, unsigned i
 			/* Check timeout */
 			if ((timeval_ms() - timeout) > TIMEOUT_ERASE) {
 				LOG_DEBUG("km1m7xx_erase() timeout : FMON = %d\n", read_fmon);
+				/* Flash Cache disable */
+				if (cache_ctrl_flag) {
+					enable_icache(bank);
+					enable_dcache(bank);
+				}
 				return ERROR_FAIL;
 			}
 		}
@@ -149,8 +372,19 @@ static int km1m7xx_erase(struct flash_bank *bank, unsigned int first, unsigned i
 		/* Check error */
 		if ((read_fmon & FMON_ERROR) != 0) {
 			LOG_DEBUG("km1m7xx_erase() Error : FMON = %d\n", read_fmon);
+			/* Flash Cache disable */
+			if (cache_ctrl_flag) {
+				enable_icache(bank);
+				enable_dcache(bank);
+			}
 			return ERROR_FAIL;
 		}
+	}
+
+	/* Flash Cache disable */
+	if (cache_ctrl_flag) {
+		enable_icache(bank);
+		enable_dcache(bank);
 	}
 
 	return ERROR_OK;
@@ -166,53 +400,64 @@ static int km1m7xx_write(struct flash_bank *bank, const uint8_t *buffer, uint32_
 	struct armv7m_algorithm	armv7m_info;
 
 	struct reg_param		reg_params[2];
-	uint32_t				mem_params32[4]	= {0, 0, 0, 0};
+	uint32_t				mem_params32[5]	= {0, 0, 0, 0, 0};
 	uint8_t					mem_params8[sizeof(mem_params32)];
 
 	uint32_t				remain_size		= 0;
 	uint32_t				buffer_size		= 0;
 	uint32_t				write_address	= 0;
 	uint32_t				write_size		= 0;
+	uint32_t				program_unit	= 0;
 	uint8_t					*write_data		= 0;
 	uint32_t				status			= 0;
+	uint32_t				cache_ctrl_flag	= 0;
 
-	static const uint8_t km1m7xx_write_code[] = {
-		0x70, 0xB5, 0x00, 0x22, 0x00, 0x20, 0x00, 0x23,
-		0x00, 0x21, 0x00, 0x24, 0x1F, 0x4D, 0x4D, 0x44,
-		0x2A, 0x68, 0x1F, 0x4D, 0x4D, 0x44, 0x28, 0x68,
-		0x1E, 0x4D, 0x4D, 0x44, 0x2B, 0x68, 0x00, 0x25,
-		0x1D, 0x4E, 0x4E, 0x44, 0x35, 0x60, 0x2B, 0xE0,
-		0x1C, 0x4D, 0xEA, 0x60, 0x20, 0xC8, 0x1B, 0x4E,
-		0x35, 0x61, 0x20, 0xC8, 0x75, 0x61, 0x00, 0x25,
-		0x35, 0x71, 0x01, 0x25, 0x35, 0x71, 0x35, 0x46,
-		0x29, 0x89, 0x29, 0x89, 0x29, 0x89, 0x16, 0x4C,
-		0x29, 0x89, 0x00, 0xBF, 0x25, 0x1E, 0xA4, 0xF1,
-		0x01, 0x04, 0x00, 0xD1, 0x70, 0xBD, 0x11, 0x4D,
-		0x29, 0x89, 0x01, 0xF0, 0x01, 0x05, 0x00, 0x2D,
-		0xF4, 0xD1, 0x0E, 0x4D, 0x2D, 0x79, 0x25, 0xF0,
-		0x01, 0x05, 0x0C, 0x4E, 0x35, 0x71, 0x01, 0xF4,
-		0x7F, 0x45, 0x1D, 0xB1, 0x08, 0x4D, 0x4D, 0x44,
-		0x29, 0x60, 0x03, 0xE0, 0x08, 0x32, 0x08, 0x3B,
-		0x00, 0x2B, 0xD1, 0xD1, 0x00, 0xBF, 0x00, 0xBE,
-		0x00, 0xBF, 0xE3, 0xE7, 0x44, 0x00, 0x00, 0x00,
-		0x48, 0x00, 0x00, 0x00, 0x4C, 0x00, 0x00, 0x00,
-		0x50, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x01, 0x40,
-		0xA0, 0x86, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+	uint32_t	flash_type		= KM1M7XX_FLASH_TYPE_KM1M7AB;
+	struct km1mxxx_flash_bank	*flash_bank_info;
+
+	static const uint8_t write_code[] = {
+		0xF0, 0xB5, 0x00, 0x22, 0x00, 0x23, 0x00, 0x24, 
+		0x00, 0x20, 0x00, 0x21, 0x00, 0x25, 0x28, 0x4E, 
+		0x4E, 0x44, 0x32, 0x68, 0x27, 0x4E, 0x4E, 0x44, 
+		0x33, 0x68, 0x27, 0x4E, 0x4E, 0x44, 0x34, 0x68, 
+		0x00, 0x26, 0x26, 0x4F, 0x4F, 0x44, 0x3E, 0x60, 
+		0x3C, 0xE0, 0x25, 0x4E, 0xF2, 0x60, 0x00, 0x20, 
+		0x06, 0xE0, 0x40, 0xCB, 0xDF, 0xF8, 0x88, 0xC0, 
+		0x0C, 0xEB, 0x80, 0x07, 0x3E, 0x61, 0x40, 0x1C, 
+		0x20, 0x4E, 0x4E, 0x44, 0x36, 0x68, 0xB0, 0xEB, 
+		0x96, 0x0F, 0xF2, 0xD3, 0x00, 0x26, 0x1C, 0x4F, 
+		0x3E, 0x71, 0x01, 0x26, 0x3E, 0x71, 0x3E, 0x46, 
+		0x31, 0x89, 0x31, 0x89, 0x31, 0x89, 0x1A, 0x4D, 
+		0x31, 0x89, 0x00, 0xBF, 0x2E, 0x1E, 0xA5, 0xF1, 
+		0x01, 0x05, 0x00, 0xD1, 0xF0, 0xBD, 0x14, 0x4E, 
+		0x31, 0x89, 0x01, 0xF0, 0x01, 0x06, 0x00, 0x2E, 
+		0xF4, 0xD1, 0x11, 0x4E, 0x36, 0x79, 0x26, 0xF0, 
+		0x01, 0x06, 0x0F, 0x4F, 0x3E, 0x71, 0x01, 0xF4, 
+		0x7F, 0x46, 0x1E, 0xB1, 0x0B, 0x4E, 0x4E, 0x44, 
+		0x31, 0x60, 0x09, 0xE0, 0x0B, 0x4E, 0x4E, 0x44, 
+		0x36, 0x68, 0x32, 0x44, 0x09, 0x4E, 0x4E, 0x44, 
+		0x36, 0x68, 0xA4, 0x1B, 0x00, 0x2C, 0xC0, 0xD1, 
+		0x00, 0xBF, 0x00, 0xBE, 0x00, 0xBF, 0xDD, 0xE7, 
+		0x44, 0x00, 0x00, 0x00, 0x48, 0x00, 0x00, 0x00, 
+		0x4C, 0x00, 0x00, 0x00, 0x54, 0x00, 0x00, 0x00, 
+		0x00, 0xC0, 0x01, 0x40, 0x50, 0x00, 0x00, 0x00, 
+		0xA0, 0x86, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+		0x00, 0x00, 0x00, 0x00, 
 	};
 
 	/* Get working area for code */
 	result = target_alloc_working_area(	target,
-											sizeof(km1m7xx_write_code),
+											sizeof(write_code),
 											&algorithm);
 	if (result != ERROR_OK) {
 		LOG_DEBUG("target_alloc_working_area() = %d\n", result);
@@ -222,8 +467,8 @@ static int km1m7xx_write(struct flash_bank *bank, const uint8_t *buffer, uint32_
 	/* Transfer write program to RAM */
 	result = target_write_buffer(	target,
 									algorithm->address,
-									sizeof(km1m7xx_write_code),
-									km1m7xx_write_code);
+									sizeof(write_code),
+									write_code);
 	if (result != ERROR_OK) {
 		LOG_DEBUG("target_write_buffer() = %d\n", result);
 		target_free_working_area(target, algorithm);
@@ -246,34 +491,66 @@ static int km1m7xx_write(struct flash_bank *bank, const uint8_t *buffer, uint32_
 		}
 	}
 
+	/* Flash Memory type  */
+	flash_bank_info = bank->driver_priv;
+	if (flash_bank_info) {
+		flash_type = flash_bank_info->cpu->flash_type;
+	} else {
+		LOG_ERROR("NuMicro flash driver: Unknown flash type\n");
+		return ERROR_FLASH_OPERATION_FAILED;
+	}
+
+	/* Set flash type parameter */
+	if (flash_type == KM1M7XX_FLASH_TYPE_KM1M7C) {
+		program_unit	= 16;
+		cache_ctrl_flag	= 1;
+	} else {
+		program_unit	= 8;
+		cache_ctrl_flag	= 0;
+	}
+
+	/* Flash Cache disable */
+	if (cache_ctrl_flag) {
+		target_read_u32(bank->target, CCR, &backup_ccr);
+		disable_icache(bank);
+		disable_dcache(bank);
+	}
+
 	/* Flash memory write enable */
 	target_write_u32(bank->target, FEWEN,	(FEWEN_KEY_CODE | FEWEN_ENABLE));
-	target_write_u32(bank->target, SPROSTR,	SPROSTR_ENABLE);
-	target_write_u32(bank->target, SPROEND,	SPROEND_ENABLE);
+	if (flash_type == KM1M7XX_FLASH_TYPE_KM1M7C) {
+		target_write_u32(bank->target, FISPROSTR_KM1M7C,	FISPROSTR_ENABLE);
+		target_write_u32(bank->target, FISPROEND_KM1M7C,	FISPROEND_ENABLE);
+	} else {
+		target_write_u32(bank->target, FISPROSTR,			FISPROSTR_ENABLE);
+		target_write_u32(bank->target, FISPROEND,			FISPROEND_ENABLE);
+	}
 
 	/**
 	 *	Set parameter (Core Register)
 	 *		Offset from last address of write program
-	 *		SP		: <-  -0x14		: Stack Pointer
-	 *		r9		: <-  -0x54		: .data Section
+	 *		SP		: <-  -0x18		: Stack Pointer
+	 *		r9		: <-  -0x58		: .data Section
 	 **/
 	init_reg_param(&reg_params[0], "sp", 32, PARAM_OUT);
 	init_reg_param(&reg_params[1], "r9", 32, PARAM_OUT);
 
 	buf_set_u32(reg_params[0].value, 0, 32,
-				(algorithm->address + sizeof(km1m7xx_write_code) - 0x14));
+				(algorithm->address + sizeof(write_code) - 0x18));
 	buf_set_u32(reg_params[1].value, 0, 32,
-				(algorithm->address + sizeof(km1m7xx_write_code) - 0x54));
+				(algorithm->address + sizeof(write_code) - 0x58));
 
 	/**
 	 *	Set parameter
 	 *		Offset from last address of write program
-	 *		(-0x10	:  -> Address      )
-	 *		 -0x0C	:  -> BufferAddress
-	 *		(-0x08	:  -> ByteCount    )
-	 *		(-0x04	: <-  Result       )
+	 *		(-0x14	:  -> Address)
+	 *		 -0x10	:  -> BufferAddress
+	 *		(-0x0C	:  -> ByteCount)
+	 *		 -0x08	:  -> Program Unit
+	 *		(-0x04	: <-  Result)
 	 **/
 	mem_params32[1] = source->address;
+	mem_params32[3] = program_unit;
 
 	/* Program in units */
 	remain_size		= count;
@@ -286,27 +563,28 @@ static int km1m7xx_write(struct flash_bank *bank, const uint8_t *buffer, uint32_
 			write_size = remain_size;
 		}
 
-		LOG_INFO(	"Program at 0x%08x to 0x%08x\n", 
+		LOG_INFO(	"Program at 0x%08x to 0x%08x", 
 					write_address, (write_address + write_size -1));
 
 		/**
 		 *	Set parameter
 		 *		Offset from last address of write program
-		 *		 -0x10	:  -> Address
-		 *		(-0x0C	:  -> BufferAddress )
-		 *		 -0x08	:  -> ByteCount
+		 *		 -0x14	:  -> Address
+		 *		(-0x10	:  -> BufferAddress )
+		 *		 -0x0C	:  -> ByteCount
+		 *		(-0x08	:  -> Program Unit)
 		 *		 -0x04	: <-  Result
 		 **/
 		mem_params32[0] = write_address;
 		mem_params32[2] = write_size;
-		mem_params32[3] = 0;
+		mem_params32[4] = 0;
 		target_buffer_set_u32_array(	target,
 										mem_params8,
 										ARRAY_SIZE(mem_params32),
 										mem_params32);
 		result = target_write_buffer(
 						target,
-						algorithm->address + sizeof(km1m7xx_write_code) - 0x10,
+						algorithm->address + sizeof(write_code) - 0x14,
 						16,
 						mem_params8);
 		if (result != ERROR_OK) {
@@ -343,7 +621,7 @@ static int km1m7xx_write(struct flash_bank *bank, const uint8_t *buffer, uint32_
 		/* Get status */
 		result = target_read_u32(
 						target,
-						algorithm->address + sizeof(km1m7xx_write_code) - 4,
+						algorithm->address + sizeof(write_code) - 4,
 						&status);
 		if (result != ERROR_OK) {
 			LOG_DEBUG("target_read_u32() = %d\n", result);
@@ -356,6 +634,12 @@ static int km1m7xx_write(struct flash_bank *bank, const uint8_t *buffer, uint32_
 		write_data		+= write_size;
 	}
 
+	/* Flash Cache disable */
+	if (cache_ctrl_flag) {
+		enable_icache(bank);
+		enable_dcache(bank);
+	}
+
 	/* Free allocated area */
 	target_free_working_area(target, algorithm);
 	target_free_working_area(target, source);
@@ -365,52 +649,127 @@ static int km1m7xx_write(struct flash_bank *bank, const uint8_t *buffer, uint32_
 	return result;
 }
 
-static int km1m7xx_probe(struct flash_bank *bank)
+static int km1m7xx_get_cpu_type(struct target *target, const struct km1mxxx_cpu_type **cpu)
 {
-	int		result = ERROR_OK;
+	uint32_t part_id;
+	int retval = ERROR_OK;
 
-	struct km1m7xx_flash_bank	*km1m7xx_info;
-	km1m7xx_info = bank->driver_priv;
+	/* Read PartID */
+	retval = target_read_u32(target, KM1MXXX_SYS_BASE, &part_id);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("NuMicro flash driver: Failed to Get PartID\n");
+		return ERROR_FLASH_OPERATION_FAILED;
+	}
 
-	/**
-	 *	Automatically determined when size = 0 is specified.
-	 *		I-Flash : 512KB or 384KB or 256KB
-	 *		D-Flash : 64KB
-	 **/
-	uint32_t	opt_reg00;
-
-	if (bank->size == 0) {
-		if (strstr(bank->name, "flash_d") != NULL) {
-			bank->size = 0x00010000;
-		} else if (strstr(bank->name, "flash_i") != NULL) {
-			result = target_read_u32(bank->target, 0x4001C160, &opt_reg00);
-			if (result != ERROR_OK) {
-				/**
-				 * Run km1m7xx_probe() again later
-				 * by leaving km1m7xx_info->probed=0.
-				 **/
-				return ERROR_OK;
-			}
-			bank->size = ((opt_reg00 & 0x00FF0000) >> 4);
-		} else {
-			bank->size = 0x00080000;
+	LOG_INFO("Device ID: 0x%08" PRIx32 "", part_id);
+	/* search part numbers */
+	for (size_t i = 0; i < ARRAY_SIZE(km1m7xx_parts); i++) {
+		if (part_id == km1m7xx_parts[i].partid) {
+			*cpu = &km1m7xx_parts[i];
+			LOG_INFO("Device Name: %s", (*cpu)->partname);
+			return ERROR_OK;
 		}
 	}
 
-	bank->num_sectors	= bank->size / FLASH_SECTOR_SIZE;
-	bank->sectors		= malloc(sizeof(struct flash_sector) * bank->num_sectors);
+	return ERROR_FAIL;
+}
 
-	int			cnt;
-	uint32_t	offset = 0;
-	for (cnt = 0; cnt < (int)(bank->num_sectors); cnt++) {
-		bank->sectors[cnt].offset		= offset;
-		bank->sectors[cnt].size			= FLASH_SECTOR_SIZE;
-		bank->sectors[cnt].is_erased	= -1;
-		bank->sectors[cnt].is_protected	= -1;
-		offset += FLASH_SECTOR_SIZE;
+static int km1m7xx_get_flash_size(struct flash_bank *bank, const struct km1mxxx_cpu_type *cpu, uint32_t *flash_size)
+{
+	for (size_t i = 0; i < cpu->n_banks; i++) {
+		if (bank->base == cpu->bank[i].base) {
+			*flash_size = cpu->bank[i].size;
+			LOG_INFO("bank base = " TARGET_ADDR_FMT ", size = 0x%08"
+					PRIx32, bank->base, *flash_size);
+			return ERROR_OK;
+		}
+	}
+	return ERROR_FLASH_OPERATION_FAILED;
+}
+
+static int km1m7xx_get_cpu_type_km1m7ab(struct target *target, const struct km1mxxx_cpu_type **cpu)
+{
+	int			retval = ERROR_OK;
+	uint32_t	opt_reg00;
+	uint32_t	iflash_size;
+
+	/* Read Option register */
+	retval = target_read_u32(target, 0x4001C160, &opt_reg00);
+	if (retval != ERROR_OK) {
+		return ERROR_FAIL;
+	}
+	iflash_size = ((opt_reg00 & 0x00FF0000) >> 4);
+
+	/* Search cpu type */
+	for (size_t i = 0; i < ARRAY_SIZE(km1m7xx_parts_km1m7ab); i++) {
+		/* Size comparison with I-Flash(bank0) */
+		if (iflash_size == km1m7xx_parts_km1m7ab[i].bank[0].size) {
+			*cpu = &km1m7xx_parts_km1m7ab[i];
+			LOG_INFO("Device Name: %s", (*cpu)->partname);
+			return ERROR_OK;
+		}
 	}
 
-	km1m7xx_info->probed = 1;
+	return ERROR_FAIL;
+}
+
+static int km1m7xx_probe(struct flash_bank *bank)
+{
+	int			cnt;
+	uint32_t part_id;
+	uint32_t flash_size, offset = 0;
+	uint32_t flash_sector_size = FLASH_SECTOR_SIZE_4K;
+	const struct km1mxxx_cpu_type *cpu;
+	struct target *target = bank->target;
+	int retval = ERROR_OK;
+
+	/* Read PartID */
+	retval = target_read_u32(target, KM1MXXX_SYS_BASE, &part_id);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("NuMicro flash driver: Failed to Get PartID\n");
+		return ERROR_FLASH_OPERATION_FAILED;
+	}
+	
+	if ((part_id == 0x00000001) || (part_id == 0x00000003)) {
+		/* For KM1M7A/B, read the initial value(0x00000001 or 0x00000003) 
+		   of CHIPCKCTR(0x40000000). */
+		retval = km1m7xx_get_cpu_type_km1m7ab(target, &cpu);
+	} else {
+		/* Reads CPUID (except for KM1M7A/B) */
+		retval = km1m7xx_get_cpu_type(target, &cpu);
+	}
+	if (retval != ERROR_OK) {
+		LOG_ERROR("NuMicro flash driver: Failed to detect a known part\n");
+		return ERROR_FLASH_OPERATION_FAILED;
+	}
+
+	retval = km1m7xx_get_flash_size(bank, cpu, &flash_size);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("NuMicro flash driver: Failed to detect flash size\n");
+		return ERROR_FLASH_OPERATION_FAILED;
+	}
+	if (cpu->flash_type == KM1M7XX_FLASH_TYPE_KM1M7C) {
+		flash_sector_size = FLASH_SECTOR_SIZE_8K;
+	}
+	
+	bank->size			= flash_size;
+	bank->num_sectors	= bank->size / flash_sector_size;
+	bank->sectors		= malloc(sizeof(struct flash_sector) * bank->num_sectors);
+
+	offset = 0;
+	for (cnt = 0; cnt < (int)(bank->num_sectors); cnt++) {
+		bank->sectors[cnt].offset		= offset;
+		bank->sectors[cnt].size			= flash_sector_size;
+		bank->sectors[cnt].is_erased	= -1;
+		bank->sectors[cnt].is_protected	= -1;
+		offset += flash_sector_size;
+	}
+
+	struct km1mxxx_flash_bank	*flash_bank_info;
+	flash_bank_info			= bank->driver_priv;
+	flash_bank_info->probed	= 1;
+	flash_bank_info->cpu	= cpu;
+
 	return ERROR_OK;
 }
 
@@ -439,9 +798,9 @@ static int km1m7xx_info(struct flash_bank *bank, char *buf, int buf_size)
 
 static int km1m7xx_auto_probe(struct flash_bank *bank)
 {
-	struct km1m7xx_flash_bank *km1m7xx_info = bank->driver_priv;
+	struct km1mxxx_flash_bank *flash_bank_info = bank->driver_priv;
 
-	if (km1m7xx_info->probed) {
+	if (flash_bank_info->probed) {
 		return ERROR_OK;
 	}
 	return(km1m7xx_probe(bank));
@@ -468,79 +827,6 @@ COMMAND_HANDLER(km1m7xx_handle_erase_all_sectors_command)
 	return ERROR_OK;
 }
 
-COMMAND_HANDLER(km1m7xx_handle_check_image_area_command)
-{
-
-	struct flash_bank	*bank			= NULL;
-	int					bank_num		= 0;
-	int					result			= ERROR_OK;
-	struct image		image;
-	int					i;
-
-	uint32_t			flash_sadrs[]	= {0x00000000, 0x00000000};
-	uint32_t			flash_eadrs[]	= {0x00000000, 0x00000000};
-	uint32_t			image_sadrs		= 0x00000000;
-	uint32_t			image_eadrs		= 0x00000000;
-	int					out_flag		= 0;
-
-	if (CMD_ARGC != 1) {
-		return ERROR_COMMAND_SYNTAX_ERROR;
-	}
-
-	/* Get all sectors information of each bank */
-	bank_num	= 0;
-	bank		= flash_bank_list();
-	while (bank != NULL) {
-
-		if (bank_num > 2) {
-			LOG_ERROR("2 bank over!!\n");
-			return ERROR_FLASH_OPER_UNSUPPORTED;
-		}
-
-		/* Get bank information */
-		get_flash_bank_by_name(bank->name, &bank);
-
-		flash_sadrs[bank_num]	= bank->base;
-		flash_eadrs[bank_num]	= bank->base + bank->size - 1;
-
-		bank_num++;
-		bank = bank->next;
-	}
-	if (bank_num == 0) {
-		LOG_ERROR("no bank!!\n");
-		return ERROR_FLASH_BANK_INVALID;
-	}
-
-	/* Check if the image contains data outside the flash memory area. */
-	image.base_address_set	= 0;
-	image.base_address		= 0;
-	image.start_address_set	= 0;
-
-	result = image_open(&image, CMD_ARGV[0], NULL);
-	if (result != ERROR_OK) {
-		return result;
-	}
-
-	out_flag = 0;
-	for (i = 0; i < image.num_sections; i++) {
-
-		image_sadrs	= (uint32_t)image.sections[i].base_address;
-		image_eadrs	= (uint32_t)image.sections[i].base_address + image.sections[i].size - 1;
-
-		if (((image_sadrs < flash_sadrs[0]) || (image_eadrs > flash_eadrs[0])) &&
-			((image_sadrs < flash_sadrs[1]) || (image_eadrs > flash_eadrs[1])) ) {
-			LOG_ERROR(	"Section beyond flash memory area : "
-						"0x%08x-0x%08x\n", image_sadrs, image_eadrs);
-			out_flag = 1;
-		}
-	}
-	if (out_flag == 1) {
-		return ERROR_FLASH_DST_OUT_OF_BANK;
-	}
-
-	return ERROR_OK;
-}
-
 static const struct command_registration km1m7xx_subcommand_handlers[] = {
 	{
 		.name		= "erase_all_sectors",
@@ -548,13 +834,6 @@ static const struct command_registration km1m7xx_subcommand_handlers[] = {
 		.mode		= COMMAND_EXEC,
 		.usage		= "",
 		.help		= "Erase all sectors",
-	},
-	{
-		.name		= "check_image_area",
-		.handler	= km1m7xx_handle_check_image_area_command,
-		.mode		= COMMAND_ANY,
-		.usage		= "",
-		.help		= "Check if the image contains data outside the flash memory area.",
 	},
 	COMMAND_REGISTRATION_DONE
 };

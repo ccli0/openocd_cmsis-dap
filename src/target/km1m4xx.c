@@ -1139,8 +1139,8 @@ static int km1m4xx_m_assert_reset(struct target *target)
 	if (ret != ERROR_OK) {
 		return ret;
 	}
-	LOG_DEBUG("CPUID(0xe000ed00) = 0x%08x\n", cpuid);
 
+	LOG_INFO("CPUID = 0x%08x\n", cpuid);
 	if (km1m4xx_key_set == 1) {
 		/* Unlock DAP */
 		target_write_u32(target, 0xf0102000, km1m4xx_key_data[0]);
@@ -1153,7 +1153,7 @@ static int km1m4xx_m_assert_reset(struct target *target)
 		if (ret != ERROR_OK) {
 			return ret;
 		}
-		LOG_DEBUG("CPUID(0xe000ed00) = 0x%08x\n", cpuid);
+		LOG_INFO("CPUID = 0x%08x\n", cpuid);
 		if (cpuid == 0x00000000) {
 			LOG_ERROR("Cannot unlock security");
 			return ERROR_FAIL;
@@ -1289,14 +1289,6 @@ static int cortex_m_deassert_reset(struct target *target)
 			return retval;
 		}
 	}
-
-	uint32_t	cpuid	= 0;
-	int			ret		= 0;
-	ret = target_read_u32(target, 0x40000000, &cpuid);
-	if (ret != ERROR_OK) {
-		return ret;
-	}
-	LOG_INFO("CPUID(0x40000000) = 0x%08x\n", cpuid);
 
 	return ERROR_OK;
 }

@@ -1140,6 +1140,7 @@ static int km1m7xx_m_assert_reset(struct target *target)
 	if (ret != ERROR_OK) {
 		return ret;
 	}
+
 	LOG_INFO("CPUID = 0x%08x\n", cpuid);
 	if ((cpuid == 0x00000000) && (km1m7xx_key_set == 1)) {
 		/* Unlock DAP */
