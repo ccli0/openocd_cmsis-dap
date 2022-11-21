@@ -19,6 +19,17 @@
 #ifndef OPENOCD_FLASH_NOR_KM1MXXX_H
 #define OPENOCD_FLASH_NOR_KM1MXXX_H
 
+/* Nuvoton KM1Mxxx Series register locations */
+#define KM1MXXX_SYS_BASE			0x40000000
+
+/* Definition for Erase timeout */
+#define	TIMEOUT_ERASE				100000
+
+/* Definition for Flash Memory */
+#define	FLASH_SECTOR_SIZE_4K		0x00001000
+#define	FLASH_SECTOR_SIZE_8K		0x00002000
+
+
 /* flash MAX banks */
 #define KM1MXXX_MAX_FLASH_BANKS		6
 

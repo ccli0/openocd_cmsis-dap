@@ -28,10 +28,6 @@
 
 #include <target/image.h>
 
-
-/* Nuvoton KM1M4 Series register locations */
-#define KM1MXXX_SYS_BASE			0x40000000
-
 /* Definition for Flash Memory Interface Register */
 #define	FI_BASE_ADDRESS			0x4001C000
 
@@ -58,11 +54,6 @@
 #define	IFCEN_DISABLE			0x00
 #define	DFCEN					0x4001C06C
 #define	DFCEN_DISABLE			0x00
-
-#define	TIMEOUT_ERASE			100000
-
-/* Definition for Flash Memory Sector Size */
-#define	FLASH_SECTOR_SIZE		0x1000
 
 /* Definition KM1M4XX Flash Memory Address */
 #define KM1M4XX_APROM_BASE		0x00000000
@@ -500,16 +491,16 @@ static int km1m4xx_probe(struct flash_bank *bank)
 	}
 
 	bank->size			= flash_size;
-	bank->num_sectors	= bank->size / FLASH_SECTOR_SIZE;
+	bank->num_sectors	= bank->size / FLASH_SECTOR_SIZE_4K;
 	bank->sectors		= malloc(sizeof(struct flash_sector) * bank->num_sectors);
 
 	offset = 0;
 	for (cnt = 0; cnt < (int)(bank->num_sectors); cnt++) {
 		bank->sectors[cnt].offset		= offset;
-		bank->sectors[cnt].size			= FLASH_SECTOR_SIZE;
+		bank->sectors[cnt].size			= FLASH_SECTOR_SIZE_4K;
 		bank->sectors[cnt].is_erased	= -1;
 		bank->sectors[cnt].is_protected	= -1;
-		offset += FLASH_SECTOR_SIZE;
+		offset += FLASH_SECTOR_SIZE_4K;
 	}
 
 	struct km1mxxx_flash_bank	*flash_bank_info;
