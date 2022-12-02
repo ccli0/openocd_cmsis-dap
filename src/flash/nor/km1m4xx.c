@@ -473,11 +473,22 @@ static int km1m4xx_get_flash_size(struct flash_bank *bank, const struct km1mxxx_
 static int km1m4xx_probe(struct flash_bank *bank)
 {
 	int			cnt;
+	uint32_t part_id = 0x00000000;
 	uint32_t flash_size, offset = 0;
 	const struct km1mxxx_cpu_type *cpu;
 	struct target *target = bank->target;
 	int retval = ERROR_OK;
 
+	/* Check tatget access */
+	retval = target_read_u32(target, KM1MXXX_SYS_BASE, &part_id);
+	if ((retval != ERROR_OK) || (part_id == 0x00000000)) {
+		/**
+		 * Run km1mxxx_probe() again later
+		 * by leaving flash_bank_info->probed=0.
+		 **/
+		return ERROR_OK;
+	}
+	
 	retval = km1m4xx_get_cpu_type(target, &cpu);
 	if (retval != ERROR_OK) {
 		LOG_ERROR("NuMicro flash driver: Failed to detect a known part\n");
