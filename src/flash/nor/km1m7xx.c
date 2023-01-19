@@ -716,7 +716,7 @@ static int km1m7xx_get_cpu_type_km1m7ab(struct target *target, const struct km1m
 static int km1m7xx_probe(struct flash_bank *bank)
 {
 	int			cnt;
-	uint32_t part_id;
+	uint32_t part_id = 0x00000000;
 	uint32_t flash_size, offset = 0;
 	uint32_t flash_sector_size = FLASH_SECTOR_SIZE_4K;
 	const struct km1mxxx_cpu_type *cpu;
@@ -725,9 +725,12 @@ static int km1m7xx_probe(struct flash_bank *bank)
 
 	/* Read PartID */
 	retval = target_read_u32(target, KM1MXXX_SYS_BASE, &part_id);
-	if (retval != ERROR_OK) {
-		LOG_ERROR("NuMicro flash driver: Failed to Get PartID\n");
-		return ERROR_FLASH_OPERATION_FAILED;
+	if ((retval != ERROR_OK) || (part_id == 0x00000000)) {
+		/**
+		 * Run km1mxxx_probe() again later
+		 * by leaving flash_bank_info->probed=0.
+		 **/
+		return ERROR_OK;
 	}
 	
 	if ((part_id == 0x00000001) || (part_id == 0x00000003)) {
